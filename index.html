@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0a1f2b" />
+<title>Reserve · Reserved List Tracker</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,700&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07151d;
+    --bg-2: #0a1f2b;
+    --surface: #0e2935;
+    --surface-2: #143746;
+    --line: #1f4d61;
+    --ink: #e6f1f5;
+    --ink-dim: #9bb4bf;
+    --ink-faint: #5c7a87;
+    --accent: #7fd4e8;
+    --accent-2: #b8e8c4;
+    --warn: #e8b87f;
+    --danger: #e87f7f;
+    --up: #7fc890;
+    --down: #e87f7f;
+    --serif: 'Fraunces', Georgia, serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  body {
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(127,212,232,0.08), transparent 50%),
+      radial-gradient(ellipse at 80% 110%, rgba(184,232,196,0.04), transparent 50%),
+      var(--bg);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 4rem;
+  }
+
+  header {
+    padding: 2rem 1.5rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  header h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 1.7rem;
+    letter-spacing: -0.02em;
+  }
+  header h1 em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 300;
+  }
+  header .tagline {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+  }
+  .header-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .lang-toggle, .icon-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    padding: 0.4rem 0.7rem;
+    border-radius: 2px;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+  }
+  .lang-toggle:hover, .icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Currency segmented toggle */
+  .currency-toggle {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .curr-btn {
+    background: transparent;
+    border: none;
+    color: var(--ink-faint);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    padding: 0.4rem 0.65rem;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    transition: all 0.15s;
+  }
+  .curr-btn + .curr-btn { border-left: 1px solid var(--line); }
+  .curr-btn:hover:not(.active) { color: var(--accent); }
+  .curr-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 500;
+  }
+
+  /* STATUS BAR */
+  .status-bar {
+    margin: 0 1.5rem 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--accent);
+    border-radius: 2px;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--ink-dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .status-bar .meta { color: var(--ink-faint); }
+  .status-bar.loading { border-left-color: var(--warn); }
+  .status-bar.error { border-left-color: var(--danger); }
+
+  /* CONTROL PANEL */
+  .controls {
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  @media (min-width: 720px) {
+    .controls { grid-template-columns: 1fr 1fr; }
+  }
+
+  .control-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 1rem;
+  }
+  .control-card h3 {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 0.75rem;
+    font-weight: 400;
+  }
+
+  /* Search box */
+  .search-row {
+    margin: 0 1.5rem 1rem;
+    position: relative;
+  }
+  .search-row input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 0.75rem 1rem;
+    font-family: var(--mono);
+    font-size: 0.95rem;
+    border-radius: 2px;
+  }
+  .search-row input:focus { outline: none; border-color: var(--accent); }
+
+  /* Filter chips */
+  .chip-row { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .chip {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.45rem 0.75rem;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+  .chip.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    font-weight: 500;
+  }
+  .chip:hover:not(.active) { color: var(--accent); border-color: var(--accent); }
+
+  /* Color chips have backgrounds */
+  .chip.color-W { color: #f5e6c8; }
+  .chip.color-U { color: #88c1e8; }
+  .chip.color-B { color: #b8a0c8; }
+  .chip.color-R { color: #e89888; }
+  .chip.color-G { color: #88c898; }
+  .chip.color-C { color: var(--ink-dim); }
+  .chip.color-M { color: var(--warn); }
+  .chip.color-W.active { background: #f5e6c8; color: #4a3a1a; border-color: #f5e6c8; }
+  .chip.color-U.active { background: #88c1e8; color: #07151d; border-color: #88c1e8; }
+  .chip.color-B.active { background: #b8a0c8; color: #2a1a3a; border-color: #b8a0c8; }
+  .chip.color-R.active { background: #e89888; color: #4a1a1a; border-color: #e89888; }
+  .chip.color-G.active { background: #88c898; color: #1a3a1a; border-color: #88c898; }
+  .chip.color-C.active { background: var(--ink-dim); color: var(--bg); }
+  .chip.color-M.active { background: var(--warn); color: var(--bg); border-color: var(--warn); }
+
+  /* Sort + price range */
+  .form-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+  .form-row label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  select, input[type=number] {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 0.4rem 0.65rem;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    border-radius: 2px;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  select { padding-right: 1.5rem; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 12 8'%3E%3Cpath fill='%239bb4bf' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.5rem center; }
+  input[type=number] { width: 80px; }
+
+  /* TABLE */
+  .results-info {
+    padding: 0 1.5rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.1em;
+  }
+
+  .table-wrap {
+    margin: 0 1.5rem;
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    min-width: 800px;
+  }
+  thead {
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  th {
+    text-align: left;
+    padding: 0.75rem 0.5rem;
+    font-weight: 400;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  th:hover { color: var(--accent); }
+  th.sorted { color: var(--accent); }
+  th.sorted::after {
+    content: ' ↓';
+    font-size: 0.8em;
+  }
+  th.sorted.asc::after { content: ' ↑'; }
+  td {
+    padding: 0.6rem 0.5rem;
+    border-bottom: 1px solid rgba(31, 77, 97, 0.5);
+    vertical-align: middle;
+    font-variant-numeric: tabular-nums;
+  }
+  tbody tr:hover { background: rgba(127, 212, 232, 0.05); }
+
+  td.name {
+    font-family: var(--serif);
+    font-size: 1rem;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 240px;
+  }
+  td.name a {
+    color: inherit;
+    text-decoration: none;
+  }
+  td.name a:hover { color: var(--accent); text-decoration: underline; text-decoration-color: var(--line); }
+  td.set {
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  td.price { color: var(--ink); }
+  td.price.na { color: var(--ink-faint); }
+  .border-flag {
+    display: inline-block;
+    margin-left: 0.4rem;
+    font-size: 0.6rem;
+    font-family: var(--mono);
+    padding: 1px 5px;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+    vertical-align: middle;
+    cursor: help;
+  }
+  .border-flag.gold { background: rgba(232, 184, 127, 0.15); color: var(--warn); border: 1px solid rgba(232, 184, 127, 0.4); }
+  .border-flag.silver { background: rgba(155, 180, 191, 0.1); color: var(--ink-dim); border: 1px solid var(--line); }
+  .set-year {
+    color: var(--ink-faint);
+    font-size: 0.65rem;
+    margin-left: 0.2rem;
+  }
+  input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+  }
+  input[type="checkbox"]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bg);
+    font-size: 12px;
+    font-weight: bold;
+  }
+  td.delta {
+    font-weight: 500;
+  }
+  td.delta.up { color: var(--up); }
+  td.delta.down { color: var(--down); }
+  td.delta.flat { color: var(--ink-faint); }
+  td.spread {
+    color: var(--ink-dim);
+    font-size: 0.8rem;
+  }
+  td.spread.high { color: var(--warn); }
+
+  .color-pip {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    margin-right: 2px;
+    border: 1px solid rgba(0,0,0,0.2);
+    vertical-align: middle;
+  }
+  .pip-W { background: #f5e6c8; }
+  .pip-U { background: #88c1e8; }
+  .pip-B { background: #4a3a4a; }
+  .pip-R { background: #e89888; }
+  .pip-G { background: #88c898; }
+  .pip-C { background: #5c7a87; }
+
+  /* MODAL */
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 1rem;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 2rem 1.75rem;
+  }
+  .modal h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    letter-spacing: -0.01em;
+  }
+  .modal p {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--ink-dim);
+    margin-bottom: 1rem;
+  }
+  .modal .footer-btns { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem; }
+  .btn {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 0.75rem 1.25rem;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  .btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 500; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary:hover { background: var(--accent-2); border-color: var(--accent-2); color: var(--bg); }
+
+  /* CARD DETAIL */
+  .card-detail-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  @media (max-width: 560px) {
+    .card-detail-grid { grid-template-columns: 1fr; }
+  }
+  .card-image {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  .card-prices table {
+    width: 100%;
+    font-size: 0.85rem;
+    min-width: 0;
+  }
+  .card-prices th { padding: 0.5rem 0.3rem; }
+  .card-prices td { padding: 0.4rem 0.3rem; }
+  .card-history-note {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--ink-faint);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+  }
+
+  .empty {
+    padding: 3rem 1rem;
+    text-align: center;
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--ink-faint);
+  }
+
+  .footer-note {
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--ink-faint);
+    margin-top: 2rem;
+    padding: 0 1rem;
+    line-height: 1.7;
+  }
+  .footer-note a { color: var(--ink-dim); }
+
+  /* Spinner */
+  .spin {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--ink-faint);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 0.5rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Reserve<em>·</em></h1>
+    <div class="tagline" data-i18n="tagline">Reserved List price tracker</div>
+  </div>
+  <div class="header-actions">
+    <div class="currency-toggle" role="group" aria-label="Delta currency">
+      <button class="curr-btn active" data-curr="eur">EUR</button>
+      <button class="curr-btn" data-curr="usd">USD</button>
+    </div>
+    <button class="icon-btn" id="btnRefresh" data-i18n="btn_refresh">Refresh prices</button>
+    <button class="icon-btn" id="btnAbout">?</button>
+    <button class="lang-toggle" id="langToggle">FI / EN</button>
+  </div>
+</header>
+
+<div class="status-bar" id="statusBar">
+  <div id="statusText"><span class="spin"></span><span data-i18n="loading_initial">Loading Reserved List…</span></div>
+  <div class="meta" id="statusMeta"></div>
+</div>
+
+<div class="search-row">
+  <input type="text" id="searchInput" placeholder="" data-i18n-placeholder="search_ph">
+</div>
+
+<div class="controls">
+
+  <div class="control-card">
+    <h3 data-i18n="filter_color">Color</h3>
+    <div class="chip-row">
+      <button class="chip color-W" data-color="W">W</button>
+      <button class="chip color-U" data-color="U">U</button>
+      <button class="chip color-B" data-color="B">B</button>
+      <button class="chip color-R" data-color="R">R</button>
+      <button class="chip color-G" data-color="G">G</button>
+      <button class="chip color-C" data-color="C" data-i18n="color_c">Colorless</button>
+      <button class="chip color-M" data-color="M" data-i18n="color_m">Multi</button>
+    </div>
+  </div>
+
+  <div class="control-card">
+    <h3 data-i18n="filter_format">Format / Type</h3>
+    <div class="chip-row">
+      <button class="chip" data-fmt="all" data-i18n="fmt_all">All</button>
+      <button class="chip" data-fmt="premodern" data-i18n="fmt_premodern">Premodern</button>
+      <button class="chip" data-fmt="legacy">Legacy</button>
+      <button class="chip" data-fmt="vintage">Vintage</button>
+      <button class="chip" data-fmt="commander">Commander</button>
+    </div>
+  </div>
+
+  <div class="control-card">
+    <h3 data-i18n="filter_era">Era / Sets</h3>
+    <div class="chip-row" style="margin-bottom: 0.6rem;">
+      <button class="chip" data-era="all" data-i18n="era_all">All</button>
+      <button class="chip" data-era="vintage" data-i18n="era_vintage">Vintage-era</button>
+      <button class="chip" data-era="early" data-i18n="era_early">Early expansions</button>
+      <button class="chip" data-era="oldschool" data-i18n="era_oldschool">Old School-era</button>
+      <button class="chip" data-era="premodern" data-i18n="era_premodern">Premodern-era</button>
+      <button class="chip" data-era="goldborder" data-i18n="era_goldborder">Gold-border only</button>
+    </div>
+    <div class="form-row" style="margin-bottom: 0.5rem;">
+      <input type="text" id="setCodesInput" placeholder="" data-i18n-placeholder="set_codes_ph" style="flex: 1; padding: 0.4rem 0.65rem; font-size: 0.8rem;">
+      <button class="chip" id="btnSetCodesClear" data-i18n="btn_clear">Clear</button>
+    </div>
+    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding-top: 0.25rem;">
+      <input type="checkbox" id="hideGoldborder" style="width: auto; margin: 0;">
+      <span style="font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; color: var(--ink-dim); text-transform: uppercase;" data-i18n="hide_goldborder">Hide gold-border (WC, CE, IE)</span>
+    </label>
+  </div>
+
+  <div class="control-card">
+    <h3 data-i18n="filter_price">Price (EUR)</h3>
+    <div class="form-row">
+      <label data-i18n="filter_min">Min</label>
+      <input type="number" id="minPrice" placeholder="0" step="1">
+      <label data-i18n="filter_max">Max</label>
+      <input type="number" id="maxPrice" placeholder="∞" step="1">
+      <button class="chip" id="btnPriceClear" data-i18n="btn_clear">Clear</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="results-info" id="resultsInfo"></div>
+
+<div class="table-wrap">
+  <table id="resultsTable">
+    <thead>
+      <tr>
+        <th data-sort="name" data-i18n="col_name">Name</th>
+        <th data-sort="set" data-i18n="col_set">Set</th>
+        <th data-i18n="col_color">Color</th>
+        <th data-sort="eur" data-i18n="col_eur">EUR</th>
+        <th data-sort="usd" data-i18n="col_usd">USD</th>
+        <th data-sort="spread" data-i18n="col_spread">Spread</th>
+        <th id="thWeek" data-sort="weekDelta">7d</th>
+        <th id="thMonth" data-sort="monthDelta">30d</th>
+        <th id="thYear" data-sort="yearDelta">365d</th>
+      </tr>
+    </thead>
+    <tbody id="resultsBody">
+      <tr><td colspan="9" class="empty" data-i18n="loading_table">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="footer-note">
+  <span data-i18n="footer">Prices from Scryfall (Cardmarket EUR + TCGplayer USD). History built locally on your device as you use the app — open weekly to build weekly deltas, monthly for monthly, etc. Nothing is shared with anyone.</span>
+</div>
+
+<!-- CARD DETAIL MODAL -->
+<div class="modal-bg" id="modalCard">
+  <div class="modal" id="modalCardInner"></div>
+</div>
+
+<!-- ABOUT MODAL -->
+<div class="modal-bg" id="modalAbout">
+  <div class="modal" id="modalAboutInner"></div>
+</div>
+
+<script>
+/* ─────────── i18n ─────────── */
+const I18N = {
+  en: {
+    tagline:'Reserved List price tracker',
+    btn_refresh:'Refresh prices',
+    loading_initial:'Loading Reserved List from Scryfall…',
+    loading_table:'Loading…',
+    search_ph:'Search by name (e.g. Mox Diamond)',
+    filter_color:'Color', filter_format:'Format / Type', filter_price:'Price (EUR)', filter_sort:'Sort by',
+    color_c:'Colorless', color_m:'Multi',
+    fmt_all:'All', fmt_premodern:'Premodern',
+    filter_era:'Era / Sets',
+    era_all:'All eras', era_vintage:'Vintage-era', era_early:'Early expansions',
+    era_oldschool:'Old School-era', era_premodern:'Premodern-era', era_goldborder:'Gold-border only',
+    set_codes_ph:'Set codes (e.g. exo, sth)',
+    hide_goldborder:'Hide gold-border (WC, CE, IE)',
+    filter_min:'Min', filter_max:'Max',
+    btn_clear:'Clear',
+    sort_name:'Name', sort_eur:'Price EUR', sort_usd:'Price USD', sort_spread:'EU/US spread',
+    sort_week:'Week change', sort_month:'Month change', sort_year:'Year change', sort_set:'Set',
+    sort_year_release:'Release year',
+    sort_desc:'High to low', sort_asc:'Low to high',
+    col_name:'Name', col_set:'Set', col_color:'Color', col_eur:'EUR', col_usd:'USD',
+    col_spread:'Spread', col_week:'7d', col_month:'30d', col_year:'365d',
+    footer:'Prices from Scryfall — every printing of every Reserved List card, with native Cardmarket EUR + TCGplayer USD. History built locally on your device. Nothing is shared with anyone.',
+    showing:'Showing {n} of {total} printings',
+    cards_loaded:'{n} printings loaded',
+    last_updated:'Last updated: {when}',
+    delta_pending:'Need a price from {days} days ago to compute this — open the app then to start tracking.',
+    no_history_yet:'No history yet for this card. Open the app on different days to build deltas.',
+    no_results:'No cards match those filters.',
+    refresh_now:'Refreshing prices…',
+    flag_gold:'Gold-bordered (WC / Collectors\u2019 Edition / similar — not tournament legal)',
+    flag_silver:'Silver-bordered (Unglued / unset / non-tournament)',
+    error_fetch:'Could not fetch prices. Check your connection.',
+    about_title:'About this tracker',
+    about_p1:'<strong>Reserve</strong> tracks every printing of every card on the official Reserved List — about 1,500+ rows total. Each printing is a distinct product (Alpha vs Beta vs Unlimited Black Lotus are not the same thing) and each gets its own row with native EUR + USD prices from Scryfall (Cardmarket + TCGplayer).',
+    about_p_fallback:'<strong>Why so many rows?</strong> Reserved List investing is printing-specific. Beta Mox Sapphire and Unlimited Mox Sapphire move on different schedules with different price floors and different collector audiences. Showing one row per card would hide that signal. Use the search box and filters to narrow to what you care about — e.g. type "Mox Sapphire" to see all Mox Sapphire printings side by side.',
+    about_p_flags:'<strong>G / S tags</strong> next to a card name flag <em>gold-bordered</em> (World Championship reprints, Collectors\u2019 Edition) and <em>silver-bordered</em> (un-set joke cards) printings. These are not tournament-legal and trade at very different prices than the regular printings. When you see a giant EU/US spread, check for a G or S tag first.',
+    about_p2:'<strong>How history works</strong>: every time you refresh prices, the app saves a snapshot to your browser\u2019s local storage. The "7d", "30d", and "365d" columns show price change compared to a snapshot from roughly that long ago. If no snapshot exists yet for that age, the cell shows "—".',
+    about_p3:'<strong>What this means in practice</strong>: open the app today, then again in a week, and the "7d" column will start showing real movement. After a month, the "30d" column comes alive. After a year, full annual deltas. Patience required for the long views.',
+    about_p4:'<strong>EU/US spread</strong>: the percentage difference between EUR and USD prices (using a rough EUR/USD rate from the app). Big positive spreads suggest the card is cheaper in the US relative to EU — potential arbitrage signal, though shipping and import VAT eat into it.',
+    about_p5:'<strong>Privacy</strong>: nothing leaves your device except the price fetch request to Scryfall itself. No accounts, no tracking, no analytics.',
+    about_p6:'<strong>Caveats</strong>: prices are aggregated/averaged feeds, not real-time market depth. They can lag actual transactions, especially on thinly traded cards. Use as a directional signal, not a binding quote.',
+    btn_close:'Close',
+    detail_eur:'Cardmarket EUR', detail_usd:'TCGplayer USD',
+    detail_now:'Now', detail_7d:'7 days ago', detail_30d:'30 days ago', detail_365d:'1 year ago',
+    detail_change:'Change',
+    open_scryfall:'Open on Scryfall',
+    open_cardmarket:'Open on Cardmarket',
+    cardmarket_unavailable:'No Cardmarket link for this card',
+    pip_W:'White', pip_U:'Blue', pip_B:'Black', pip_R:'Red', pip_G:'Green',
+  },
+  fi: {
+    tagline:'Reserved List -hintaseuranta',
+    btn_refresh:'Päivitä hinnat',
+    loading_initial:'Ladataan Reserved Listiä Scryfallista…',
+    loading_table:'Ladataan…',
+    search_ph:'Hae nimellä (esim. Mox Diamond)',
+    filter_color:'Väri', filter_format:'Formaatti / tyyppi', filter_price:'Hinta (EUR)', filter_sort:'Lajittele',
+    color_c:'Värittömät', color_m:'Monivärinen',
+    fmt_all:'Kaikki', fmt_premodern:'Premodern',
+    filter_era:'Aikakausi / setit',
+    era_all:'Kaikki aikakaudet', era_vintage:'Vintage-aikakausi', era_early:'Varhaiset laajennukset',
+    era_oldschool:'Old School-aikakausi', era_premodern:'Premodern-aikakausi', era_goldborder:'Vain gold-border',
+    set_codes_ph:'Setti-koodit (esim. exo, sth)',
+    hide_goldborder:'Piilota gold-border (WC, CE, IE)',
+    filter_min:'Min', filter_max:'Max',
+    btn_clear:'Tyhjennä',
+    sort_name:'Nimi', sort_eur:'Hinta EUR', sort_usd:'Hinta USD', sort_spread:'EU/US-ero',
+    sort_week:'Viikon muutos', sort_month:'Kuun muutos', sort_year:'Vuoden muutos', sort_set:'Setti',
+    sort_year_release:'Julkaisuvuosi',
+    sort_desc:'Suurin ensin', sort_asc:'Pienin ensin',
+    col_name:'Nimi', col_set:'Setti', col_color:'Väri', col_eur:'EUR', col_usd:'USD',
+    col_spread:'Ero', col_week:'7pv', col_month:'30pv', col_year:'365pv',
+    footer:'Hinnat Scryfallista — jokainen printti jokaisesta Reserved List -kortista, natiivit Cardmarket EUR + TCGplayer USD. Historia kerätään paikallisesti. Mitään ei jaeta.',
+    showing:'Näytetään {n} / {total} printtiä',
+    cards_loaded:'{n} printtiä ladattu',
+    last_updated:'Päivitetty: {when}',
+    delta_pending:'Tarvitaan hinta {days} päivän takaa — avaa sovellus silloin aloittaaksesi seurannan.',
+    no_history_yet:'Ei vielä historiaa tälle kortille. Avaa sovellus eri päivinä kerätäksesi dataa.',
+    no_results:'Suodattimet eivät täsmää yhteenkään korttiin.',
+    refresh_now:'Päivitetään hintoja…',
+    flag_gold:'Gold-border-versio (WC / Collectors\u2019 Edition / vastaava — ei turnauslegaali)',
+    flag_silver:'Silver-border-versio (Unglued / un-setit / ei turnauslegaali)',
+    error_fetch:'Hintojen haku epäonnistui. Tarkista yhteys.',
+    about_title:'Tietoa sovelluksesta',
+    about_p1:'<strong>Reserve</strong> seuraa jokaista printtiä jokaisesta kortista virallisella Reserved Listillä — n. 1500+ riviä yhteensä. Jokainen printti on eri tuote (Alpha-, Beta- ja Unlimited-Black Lotus eivät ole sama asia) ja jokainen saa oman rivinsä natiivilla EUR- ja USD-hinnalla Scryfallista (Cardmarket + TCGplayer).',
+    about_p_fallback:'<strong>Miksi näin paljon rivejä?</strong> Reserved List -sijoittaminen on printti-spesifistä. Beta-Mox Sapphire ja Unlimited-Mox Sapphire liikkuvat eri tahdissa, eri hintapohjalla ja eri keräilijöiden välillä. Yksi rivi per kortti piilottaisi tämän signaalin. Käytä hakua ja suodattimia rajataksesi näkymää — esim. kirjoita "Mox Sapphire" niin näet kaikki Mox Sapphire -printit rinnakkain.',
+    about_p_flags:'<strong>G / S -tagit</strong> kortin nimen vieressä merkitsevät <em>gold-bordered</em>-printtejä (World Championship -reprintit, Collectors\u2019 Edition) ja <em>silver-bordered</em>-printtejä (un-setin vitsikortit). Nämä eivät ole turnauslegaaleja ja niiden hinnat poikkeavat huomattavasti normaaliprinteistä. Jos näet valtavan EU/US-spreadin, tarkista ensin onko rivillä G- tai S-tagi.',
+    about_p2:'<strong>Miten historia toimii</strong>: jokaisella päivityksellä sovellus tallentaa hetkellisen kuvan selaimesi paikalliseen tallennukseen. Sarakkeet "7pv", "30pv" ja "365pv" näyttävät muutoksen suhteessa noin sen ikäiseen kuvaan. Jos kuvaa ei vielä ole, näkyy "—".',
+    about_p3:'<strong>Käytännössä</strong>: avaa nyt, sitten viikon päästä, niin "7pv"-sarake alkaa näyttää oikeaa liikettä. Kuukauden päästä "30pv". Vuoden päästä täydet vuosimuutokset. Pitkät näkymät vaativat kärsivällisyyttä.',
+    about_p4:'<strong>EU/US-ero</strong>: prosentuaalinen ero EUR- ja USD-hintojen välillä (käyttäen karkeaa EUR/USD-kurssia). Suuri positiivinen ero viittaa että kortti on halvempi USA:ssa suhteessa EU:hun — arbitraasisignaali, mutta postikulut ja ALV syövät katetta.',
+    about_p5:'<strong>Yksityisyys</strong>: laitteeltasi ei lähetetä mitään muuta kuin hintahakupyyntö Scryfallille. Ei tilejä, ei seurantaa, ei analytiikkaa.',
+    about_p6:'<strong>Varauksia</strong>: hinnat ovat keskiarvosyötteitä, eivät reaaliaikaista markkinasyvyyttä. Voivat jäädä jälkeen oikeista kaupoista, etenkin harvoin vaihdettujen korttien kohdalla. Käytä suuntaa antavana, ei sitovana hintana.',
+    btn_close:'Sulje',
+    detail_eur:'Cardmarket EUR', detail_usd:'TCGplayer USD',
+    detail_now:'Nyt', detail_7d:'7 päivää sitten', detail_30d:'30 päivää sitten', detail_365d:'1 vuosi sitten',
+    detail_change:'Muutos',
+    open_scryfall:'Avaa Scryfallissa',
+    open_cardmarket:'Avaa Cardmarketissa',
+    cardmarket_unavailable:'Ei Cardmarket-linkkiä tälle kortille',
+    pip_W:'Valkoinen', pip_U:'Sininen', pip_B:'Musta', pip_R:'Punainen', pip_G:'Vihreä',
+  }
+};
+
+const LS = {
+  cards: 'rl_cards_v5',
+  history: 'rl_history_v2',
+  lastFetch: 'rl_last_fetch_v5',
+  fxRate: 'rl_fx_rate_v1',
+  prefs: 'rl_prefs_v1',          // saved filter preferences
+};
+
+// Set groupings for era filter. Lowercase Scryfall set codes.
+const ERAS = {
+  vintage: ['lea','leb','2ed','3ed'],
+  early: ['arn','atq','leg','drk','fem','chr','4ed','5ed'],
+  oldschool: ['ice','hml','all','mir','vis','wth'],
+  premodern: ['tmp','sth','exo','usg','ulg','uds'],
+};
+const GOLD_BORDER_SETS = new Set([
+  'cei','ced',  // Collectors' Edition, International Edition
+  'wc97','wc98','wc99','wc00','wc01','wc02','wc03','wc04',
+]);
+
+const state = {
+  lang: (navigator.language||'').startsWith('fi') ? 'fi' : 'en',
+  cards: [],
+  history: [],
+  fxRate: 1.08,
+  deltaCurrency: 'eur',        // 'eur' or 'usd' — drives 7d/30d/365d calculations
+  filters: {
+    search: '',
+    colors: new Set(),
+    format: 'all',
+    era: 'all',
+    setCodes: '',
+    hideGoldborder: true,
+    minPrice: null,
+    maxPrice: null,
+  },
+  sortField: 'eur',
+  sortDir: 'desc',
+};
+
+function load(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } }
+function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { console.warn('storage full', e); } }
+function t(key) { return I18N[state.lang][key] || I18N.en[key] || key; }
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.innerHTML = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll('#sortField option').forEach(opt => {
+    if (opt.dataset.i18n) opt.textContent = t(opt.dataset.i18n);
+  });
+  document.querySelectorAll('#sortDir option').forEach(opt => {
+    if (opt.dataset.i18n) opt.textContent = t(opt.dataset.i18n);
+  });
+  document.getElementById('langToggle').textContent = state.lang === 'fi' ? 'EN' : 'FI';
+  render();
+}
+
+/* ─────────── Scryfall fetch ─────────── */
+async function fetchReservedList(onProgress) {
+  const all = [];
+  // unique=prints: every distinct physical printing gets its own row.
+  // Filter out digital-only (MTGO Vintage Masters etc.) and oversized (commander-deck oversized).
+  // Keep gold-bordered (WC) so the user has full visibility, but they'll be obvious from price/set code.
+  let next = 'https://api.scryfall.com/cards/search?q=is%3Areserved+-is%3Adigital+-is%3Aoversized&unique=prints&order=released&dir=asc';
+  while (next) {
+    onProgress(all.length);
+    const res = await fetch(next);
+    if (!res.ok) throw new Error('Scryfall error: ' + res.status);
+    const json = await res.json();
+    all.push(...json.data);
+    next = json.has_more ? json.next_page : null;
+    // Be polite to Scryfall: 100ms between requests
+    if (next) await new Promise(r => setTimeout(r, 120));
+  }
+  return all;
+}
+
+function normalizeCard(c) {
+  const eur = c.prices?.eur ? parseFloat(c.prices.eur) : null;
+  const usd = c.prices?.usd ? parseFloat(c.prices.usd) : null;
+  // released_at format: "1993-08-05"
+  const releaseYear = c.released_at ? parseInt(c.released_at.slice(0, 4)) : null;
+  return {
+    id: c.id,             // unique per printing — used as row key
+    oracleId: c.oracle_id, // shared across all printings of the same card
+    cardmarketUri: c.purchase_uris?.cardmarket || null,
+    name: c.name,
+    set: c.set,
+    setName: c.set_name,
+    releaseYear,
+    rarity: c.rarity,
+    colors: c.colors || [],
+    colorIdentity: c.color_identity || [],
+    typeLine: c.type_line || '',
+    cmc: c.cmc,
+    legalities: c.legalities || {},
+    imageUri: c.image_uris?.normal || c.image_uris?.large || (c.card_faces && c.card_faces[0]?.image_uris?.normal),
+    scryfallUri: c.scryfall_uri,
+    frameEffects: c.frame_effects || [],
+    borderColor: c.border_color || null,  // 'black' | 'white' | 'silver' | 'gold' | 'borderless'
+    finishes: c.finishes || [],
+    eur, usd,
+  };
+}
+
+async function refreshPrices() {
+  const statusBar = document.getElementById('statusBar');
+  const statusText = document.getElementById('statusText');
+  statusBar.classList.add('loading');
+  statusBar.classList.remove('error');
+  statusText.innerHTML = `<span class="spin"></span><span>${t('refresh_now')}</span>`;
+  try {
+    const raw = await fetchReservedList(n => {
+      statusText.innerHTML = `<span class="spin"></span><span>${t('refresh_now')} (${n})</span>`;
+    });
+    state.cards = raw.map(normalizeCard);
+
+    save(LS.cards, state.cards);
+
+    // Save snapshot to history (keyed by printing id — every printing tracked separately)
+    const today = new Date().toISOString().slice(0,10);
+    const snapshot = { date: today, prices: {} };
+    for (const c of state.cards) {
+      snapshot.prices[c.id] = { eur: c.eur, usd: c.usd };
+    }
+    // Replace today's snapshot if already exists, else append
+    state.history = state.history.filter(h => h.date !== today);
+    state.history.push(snapshot);
+    // Keep history reasonable size: prune snapshots older than 400 days
+    const cutoff = Date.now() - 400 * 24 * 3600 * 1000;
+    state.history = state.history.filter(h => new Date(h.date).getTime() > cutoff);
+    save(LS.history, state.history);
+
+    const now = Date.now();
+    save(LS.lastFetch, now);
+
+    // Try to refresh FX rate
+    await tryUpdateFxRate();
+
+    statusBar.classList.remove('loading');
+    updateStatusBar();
+    render();
+  } catch (e) {
+    console.error(e);
+    statusBar.classList.remove('loading');
+    statusBar.classList.add('error');
+    statusText.textContent = t('error_fetch') + ' ' + e.message;
+  }
+}
+
+async function tryUpdateFxRate() {
+  // Best-effort: try to get a recent EUR/USD rate. If it fails, keep old rate.
+  try {
+    const res = await fetch('https://api.frankfurter.dev/v1/latest?base=EUR&symbols=USD');
+    if (!res.ok) return;
+    const j = await res.json();
+    if (j.rates?.USD) {
+      state.fxRate = j.rates.USD; // USD per EUR
+      save(LS.fxRate, state.fxRate);
+    }
+  } catch {}
+}
+
+function updateStatusBar() {
+  const last = load(LS.lastFetch, 0);
+  const statusText = document.getElementById('statusText');
+  const statusMeta = document.getElementById('statusMeta');
+  if (last) {
+    const ago = Math.floor((Date.now() - last) / 1000 / 60);
+    let when;
+    if (ago < 1) when = state.lang === 'fi' ? 'juuri nyt' : 'just now';
+    else if (ago < 60) when = `${ago} min ${state.lang === 'fi' ? 'sitten' : 'ago'}`;
+    else if (ago < 24*60) when = `${Math.floor(ago/60)} h ${state.lang === 'fi' ? 'sitten' : 'ago'}`;
+    else when = `${Math.floor(ago/(24*60))} ${state.lang === 'fi' ? 'pv sitten' : 'd ago'}`;
+    statusText.textContent = t('cards_loaded').replace('{n}', state.cards.length);
+    statusMeta.textContent = t('last_updated').replace('{when}', when) + ' · EUR/USD ' + state.fxRate.toFixed(3) + ' · history ' + state.history.length + (state.lang==='fi'?' kuvaa':' snapshots');
+  }
+}
+
+/* ─────────── Deltas ─────────── */
+function findHistoricalSnapshot(daysAgo) {
+  // Find the snapshot closest to N days ago, within a window of +/-3 days for week, +/-7 for month, +/-30 for year
+  const target = Date.now() - daysAgo * 24 * 3600 * 1000;
+  let window;
+  if (daysAgo <= 14) window = 3;
+  else if (daysAgo <= 60) window = 7;
+  else window = 30;
+  const windowMs = window * 24 * 3600 * 1000;
+  let best = null;
+  let bestDist = Infinity;
+  for (const snap of state.history) {
+    const ts = new Date(snap.date).getTime();
+    const dist = Math.abs(ts - target);
+    if (dist <= windowMs && dist < bestDist) {
+      best = snap;
+      bestDist = dist;
+    }
+  }
+  return best;
+}
+
+function computeDelta(card, daysAgo) {
+  const snap = findHistoricalSnapshot(daysAgo);
+  if (!snap) return null;
+  const old = snap.prices[card.id];
+  if (!old) return null;
+  const cur = state.deltaCurrency;
+  const oldP = old[cur];
+  const newP = card[cur];
+  if (!oldP || !newP) return null;
+  return ((newP - oldP) / oldP) * 100;
+}
+
+function computeSpread(card) {
+  if (!card.eur || !card.usd) return null;
+  const usdAsEur = card.usd / state.fxRate;
+  return ((card.eur - usdAsEur) / usdAsEur) * 100;
+}
+
+/* ─────────── Filtering & sorting ─────────── */
+function getDominantColor(card) {
+  const colors = card.colors;
+  if (!colors || colors.length === 0) return 'C';
+  if (colors.length > 1) return 'M';
+  return colors[0];
+}
+
+function getFilteredCards() {
+  let list = state.cards.slice();
+
+  if (state.filters.search) {
+    const q = state.filters.search.toLowerCase();
+    list = list.filter(c => c.name.toLowerCase().includes(q));
+  }
+  if (state.filters.colors.size > 0) {
+    list = list.filter(c => state.filters.colors.has(getDominantColor(c)));
+  }
+  if (state.filters.format !== 'all') {
+    list = list.filter(c => c.legalities[state.filters.format] === 'legal');
+  }
+  // Era filter
+  if (state.filters.era && state.filters.era !== 'all') {
+    if (state.filters.era === 'goldborder') {
+      list = list.filter(c => GOLD_BORDER_SETS.has(c.set) || c.borderColor === 'gold');
+    } else {
+      const eraSets = new Set(ERAS[state.filters.era] || []);
+      list = list.filter(c => eraSets.has(c.set));
+    }
+  }
+  // Setti-codes text filter (comma-separated)
+  if (state.filters.setCodes) {
+    const codes = state.filters.setCodes
+      .toLowerCase()
+      .split(/[\s,]+/)
+      .filter(Boolean);
+    if (codes.length) {
+      list = list.filter(c => codes.includes(c.set));
+    }
+  }
+  // Hide gold-border toggle (only applies if era != 'goldborder')
+  if (state.filters.hideGoldborder && state.filters.era !== 'goldborder') {
+    list = list.filter(c => !GOLD_BORDER_SETS.has(c.set) && c.borderColor !== 'gold');
+  }
+  if (state.filters.minPrice !== null) {
+    list = list.filter(c => (c.eur || 0) >= state.filters.minPrice);
+  }
+  if (state.filters.maxPrice !== null) {
+    list = list.filter(c => (c.eur || 0) <= state.filters.maxPrice);
+  }
+
+  // attach computed fields
+  for (const c of list) {
+    c._spread = computeSpread(c);
+    c._weekDelta = computeDelta(c, 7);
+    c._monthDelta = computeDelta(c, 30);
+    c._yearDelta = computeDelta(c, 365);
+  }
+
+  // sort
+  const f = state.sortField;
+  const dir = state.sortDir === 'asc' ? 1 : -1;
+  list.sort((a, b) => {
+    let av, bv;
+    if (f === 'name') { av = a.name.toLowerCase(); bv = b.name.toLowerCase(); }
+    else if (f === 'set') { av = a.set; bv = b.set; }
+    else if (f === 'eur') { av = a.eur; bv = b.eur; }
+    else if (f === 'usd') { av = a.usd; bv = b.usd; }
+    else if (f === 'spread') { av = a._spread; bv = b._spread; }
+    else if (f === 'weekDelta') { av = a._weekDelta; bv = b._weekDelta; }
+    else if (f === 'monthDelta') { av = a._monthDelta; bv = b._monthDelta; }
+    else if (f === 'yearDelta') { av = a._yearDelta; bv = b._yearDelta; }
+    else if (f === 'releaseYear') { av = a.releaseYear; bv = b.releaseYear; }
+    // nulls last regardless of direction
+    if (av == null && bv == null) {
+      // tie on primary — when sorting by name, break ties by release year asc (oldest first)
+      if (f === 'name') return (a.releaseYear || 9999) - (b.releaseYear || 9999);
+      return 0;
+    }
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (typeof av === 'string') {
+      const r = av.localeCompare(bv);
+      if (r !== 0) return r * dir;
+      // tie-break by release year ascending
+      return (a.releaseYear || 9999) - (b.releaseYear || 9999);
+    }
+    const r = (av - bv) * dir;
+    if (r !== 0) return r;
+    // tie-break — alphabetical name, then release year
+    if (a.name !== b.name) return a.name.localeCompare(b.name);
+    return (a.releaseYear || 9999) - (b.releaseYear || 9999);
+  });
+
+  return list;
+}
+
+/* ─────────── Render ─────────── */
+function render() {
+  if (!state.cards.length) {
+    document.getElementById('resultsBody').innerHTML =
+      '<tr><td colspan="9" class="empty">' + t('loading_table') + '</td></tr>';
+    return;
+  }
+  const list = getFilteredCards();
+  document.getElementById('resultsInfo').textContent =
+    t('showing').replace('{n}', list.length).replace('{total}', state.cards.length);
+
+  if (!list.length) {
+    document.getElementById('resultsBody').innerHTML =
+      '<tr><td colspan="9" class="empty">' + t('no_results') + '</td></tr>';
+    return;
+  }
+
+  const rows = list.map(c => {
+    const fmtPrice = (v, cur) => {
+      if (v == null) return `<td class="price na">—</td>`;
+      return `<td class="price">${cur}${v.toFixed(2)}</td>`;
+    };
+    const fmtDelta = v => {
+      if (v == null) return '<td class="delta flat">—</td>';
+      const cls = v > 0.5 ? 'up' : v < -0.5 ? 'down' : 'flat';
+      const sign = v > 0 ? '+' : '';
+      return `<td class="delta ${cls}">${sign}${v.toFixed(1)}%</td>`;
+    };
+    const fmtSpread = v => {
+      if (v == null) return '<td class="spread">—</td>';
+      const sign = v > 0 ? '+' : '';
+      const cls = Math.abs(v) > 15 ? 'high' : '';
+      return `<td class="spread ${cls}">${sign}${v.toFixed(0)}%</td>`;
+    };
+    const pips = (c.colors || []).map(col => `<span class="color-pip pip-${col}" title="${t('pip_'+col)||col}"></span>`).join('');
+    const colorCell = c.colors.length === 0 ? `<span class="color-pip pip-C" title="${t('color_c')}"></span>` : pips;
+    // Visual flag for non-tournament-legal borders so spread anomalies make sense at a glance
+    const borderFlag = (c.borderColor === 'gold')
+      ? ` <span class="border-flag gold" title="${t('flag_gold')}">G</span>`
+      : (c.borderColor === 'silver')
+        ? ` <span class="border-flag silver" title="${t('flag_silver')}">S</span>`
+        : '';
+    const yearSuffix = c.releaseYear ? `<span class="set-year">'${String(c.releaseYear).slice(2)}</span>` : '';
+    return `<tr data-card-id="${c.id}">
+      <td class="name"><a data-card-id="${c.id}">${escapeHtml(c.name)}</a>${borderFlag}</td>
+      <td class="set">${c.set} ${yearSuffix}</td>
+      <td>${colorCell}</td>
+      ${fmtPrice(c.eur, '€')}
+      ${fmtPrice(c.usd, '$')}
+      ${fmtSpread(c._spread)}
+      ${fmtDelta(c._weekDelta)}
+      ${fmtDelta(c._monthDelta)}
+      ${fmtDelta(c._yearDelta)}
+    </tr>`;
+  }).join('');
+  document.getElementById('resultsBody').innerHTML = rows;
+
+  // Wire up row clicks
+  document.querySelectorAll('#resultsBody tr[data-card-id]').forEach(row => {
+    row.addEventListener('click', () => {
+      const id = row.dataset.cardId;
+      const card = state.cards.find(c => c.id === id);
+      if (card) showCardDetail(card);
+    });
+  });
+
+  // Update sorted header indicator
+  document.querySelectorAll('th[data-sort]').forEach(th => {
+    th.classList.remove('sorted', 'asc');
+    if (th.dataset.sort === state.sortField) {
+      th.classList.add('sorted');
+      if (state.sortDir === 'asc') th.classList.add('asc');
+    }
+  });
+
+  // Update delta column headers to indicate which currency is being measured
+  const curSym = state.deltaCurrency === 'eur' ? '€' : '$';
+  document.getElementById('thWeek').textContent = t('col_week') + ' ' + curSym;
+  document.getElementById('thMonth').textContent = t('col_month') + ' ' + curSym;
+  document.getElementById('thYear').textContent = t('col_year') + ' ' + curSym;
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ─────────── Card detail modal ─────────── */
+function showCardDetail(card) {
+  const inner = document.getElementById('modalCardInner');
+  const week = computeDelta(card, 7);
+  const month = computeDelta(card, 30);
+  const year = computeDelta(card, 365);
+  const spread = computeSpread(card);
+
+  const snap7 = findHistoricalSnapshot(7)?.prices[card.id];
+  const snap30 = findHistoricalSnapshot(30)?.prices[card.id];
+  const snap365 = findHistoricalSnapshot(365)?.prices[card.id];
+
+  const formatRow = (label, eur, usd, delta) => {
+    const e = eur != null ? '€' + eur.toFixed(2) : '—';
+    const u = usd != null ? '$' + usd.toFixed(2) : '—';
+    let d = '—';
+    if (delta != null) {
+      const sign = delta > 0 ? '+' : '';
+      const cls = delta > 0.5 ? 'up' : delta < -0.5 ? 'down' : 'flat';
+      d = `<span class="delta ${cls}">${sign}${delta.toFixed(1)}%</span>`;
+    }
+    return `<tr><td>${label}</td><td>${e}</td><td>${u}</td><td>${d}</td></tr>`;
+  };
+
+  inner.innerHTML = `
+    <h2>${escapeHtml(card.name)}</h2>
+    <div class="card-detail-grid">
+      ${card.imageUri ? `<img class="card-image" src="${card.imageUri}" alt="${escapeHtml(card.name)}">` : ''}
+      <div class="card-prices">
+        <div style="font-family: var(--mono); font-size: 0.7rem; color: var(--ink-faint); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem;">${card.setName} · ${card.typeLine}</div>
+        <table>
+          <thead><tr>
+            <th></th>
+            <th>${t('detail_eur')}</th>
+            <th>${t('detail_usd')}</th>
+            <th>${t('detail_change')}</th>
+          </tr></thead>
+          <tbody>
+            ${formatRow(t('detail_now'), card.eur, card.usd, null)}
+            ${formatRow(t('detail_7d'), snap7?.eur, snap7?.usd, week)}
+            ${formatRow(t('detail_30d'), snap30?.eur, snap30?.usd, month)}
+            ${formatRow(t('detail_365d'), snap365?.eur, snap365?.usd, year)}
+          </tbody>
+        </table>
+        ${(week == null && month == null && year == null)
+          ? `<div class="card-history-note">${t('no_history_yet')}</div>` : ''}
+        <div style="margin-top: 1rem; font-family: var(--mono); font-size: 0.75rem; color: var(--ink-dim);">
+          EU/US spread: ${spread != null ? (spread > 0 ? '+' : '') + spread.toFixed(1) + '%' : '—'}
+        </div>
+      </div>
+    </div>
+    <div class="footer-btns">
+      <a class="btn" href="${card.scryfallUri}" target="_blank" rel="noopener">${t('open_scryfall')}</a>
+      ${card.cardmarketUri
+        ? `<a class="btn primary" href="${card.cardmarketUri}" target="_blank" rel="noopener">${t('open_cardmarket')}</a>`
+        : `<span class="btn" style="opacity: 0.5; cursor: not-allowed;" title="${t('cardmarket_unavailable')}">${t('open_cardmarket')}</span>`
+      }
+      <button class="btn" id="btnCardClose">${t('btn_close')}</button>
+    </div>
+  `;
+  document.getElementById('modalCard').classList.add('show');
+  document.getElementById('btnCardClose').addEventListener('click', () => {
+    document.getElementById('modalCard').classList.remove('show');
+  });
+}
+
+/* ─────────── About modal ─────────── */
+function showAbout() {
+  document.getElementById('modalAboutInner').innerHTML = `
+    <h2>${t('about_title')}</h2>
+    <p>${t('about_p1')}</p>
+    <p>${t('about_p_fallback')}</p>
+    <p>${t('about_p_flags')}</p>
+    <p>${t('about_p2')}</p>
+    <p>${t('about_p3')}</p>
+    <p>${t('about_p4')}</p>
+    <p>${t('about_p5')}</p>
+    <p>${t('about_p6')}</p>
+    <div class="footer-btns"><button class="btn primary" id="btnAboutClose">${t('btn_close')}</button></div>
+  `;
+  document.getElementById('modalAbout').classList.add('show');
+  document.getElementById('btnAboutClose').addEventListener('click', () => {
+    document.getElementById('modalAbout').classList.remove('show');
+  });
+}
+
+/* ─────────── Event wiring ─────────── */
+document.getElementById('searchInput').addEventListener('input', e => {
+  state.filters.search = e.target.value.trim();
+  render();
+});
+document.querySelectorAll('[data-color]').forEach(b => {
+  b.addEventListener('click', () => {
+    const c = b.dataset.color;
+    if (state.filters.colors.has(c)) state.filters.colors.delete(c);
+    else state.filters.colors.add(c);
+    b.classList.toggle('active');
+    render();
+  });
+});
+document.querySelectorAll('[data-fmt]').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('[data-fmt]').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    state.filters.format = b.dataset.fmt;
+    savePrefs();
+    render();
+  });
+});
+document.querySelectorAll('[data-era]').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('[data-era]').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    state.filters.era = b.dataset.era;
+    savePrefs();
+    render();
+  });
+});
+document.getElementById('setCodesInput').addEventListener('input', e => {
+  state.filters.setCodes = e.target.value.trim();
+  savePrefs();
+  render();
+});
+document.getElementById('btnSetCodesClear').addEventListener('click', () => {
+  document.getElementById('setCodesInput').value = '';
+  state.filters.setCodes = '';
+  savePrefs();
+  render();
+});
+document.getElementById('hideGoldborder').addEventListener('change', e => {
+  state.filters.hideGoldborder = e.target.checked;
+  savePrefs();
+  render();
+});
+document.getElementById('minPrice').addEventListener('input', e => {
+  state.filters.minPrice = e.target.value ? parseFloat(e.target.value) : null;
+  render();
+});
+document.getElementById('maxPrice').addEventListener('input', e => {
+  state.filters.maxPrice = e.target.value ? parseFloat(e.target.value) : null;
+  render();
+});
+document.getElementById('btnPriceClear').addEventListener('click', () => {
+  document.getElementById('minPrice').value = '';
+  document.getElementById('maxPrice').value = '';
+  state.filters.minPrice = null;
+  state.filters.maxPrice = null;
+  render();
+});
+document.querySelectorAll('th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const f = th.dataset.sort;
+    if (state.sortField === f) {
+      state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      state.sortField = f;
+      state.sortDir = (f === 'name' || f === 'set') ? 'asc' : 'desc';
+    }
+    savePrefs();
+    render();
+  });
+});
+// Currency toggle for delta calculations
+document.querySelectorAll('[data-curr]').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('[data-curr]').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    state.deltaCurrency = b.dataset.curr;
+    savePrefs();
+    render();
+  });
+});
+document.getElementById('btnRefresh').addEventListener('click', () => refreshPrices());
+document.getElementById('btnAbout').addEventListener('click', showAbout);
+document.getElementById('langToggle').addEventListener('click', () => {
+  state.lang = state.lang === 'fi' ? 'en' : 'fi';
+  applyI18n();
+});
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('show'); });
+});
+
+// Activate "all" format chip
+document.querySelector('[data-fmt="all"]').classList.add('active');
+document.querySelector('[data-era="all"]').classList.add('active');
+
+/* ─────────── Filter preferences (persist UI state across sessions) ─────────── */
+function savePrefs() {
+  save(LS.prefs, {
+    format: state.filters.format,
+    era: state.filters.era,
+    setCodes: state.filters.setCodes,
+    hideGoldborder: state.filters.hideGoldborder,
+    sortField: state.sortField,
+    sortDir: state.sortDir,
+    deltaCurrency: state.deltaCurrency,
+  });
+}
+function loadPrefs() {
+  const p = load(LS.prefs, null);
+  if (!p) return;
+  if (p.format) {
+    state.filters.format = p.format;
+    document.querySelectorAll('[data-fmt]').forEach(x => x.classList.remove('active'));
+    const btn = document.querySelector(`[data-fmt="${p.format}"]`);
+    if (btn) btn.classList.add('active');
+  }
+  if (p.era) {
+    state.filters.era = p.era;
+    document.querySelectorAll('[data-era]').forEach(x => x.classList.remove('active'));
+    const btn = document.querySelector(`[data-era="${p.era}"]`);
+    if (btn) btn.classList.add('active');
+  }
+  if (typeof p.setCodes === 'string') {
+    state.filters.setCodes = p.setCodes;
+    document.getElementById('setCodesInput').value = p.setCodes;
+  }
+  if (typeof p.hideGoldborder === 'boolean') {
+    state.filters.hideGoldborder = p.hideGoldborder;
+  }
+  if (p.sortField) {
+    state.sortField = p.sortField;
+  }
+  if (p.sortDir) {
+    state.sortDir = p.sortDir;
+  }
+  if (p.deltaCurrency === 'eur' || p.deltaCurrency === 'usd') {
+    state.deltaCurrency = p.deltaCurrency;
+    document.querySelectorAll('[data-curr]').forEach(x => x.classList.remove('active'));
+    const btn = document.querySelector(`[data-curr="${p.deltaCurrency}"]`);
+    if (btn) btn.classList.add('active');
+  }
+}
+
+/* ─────────── Init ─────────── */
+state.cards = load(LS.cards, []);
+state.history = load(LS.history, []);
+state.fxRate = load(LS.fxRate, 1.08);
+
+// Apply saved filter prefs (must run AFTER chip "active" defaults are set above
+// and BEFORE first render — so the UI shows the user's last-used filter state)
+loadPrefs();
+// Set the gold-border checkbox to reflect current state (default true)
+document.getElementById('hideGoldborder').checked = state.filters.hideGoldborder;
+
+applyI18n();
+
+if (state.cards.length === 0) {
+  // First open ever — fetch
+  refreshPrices();
+} else {
+  // Have cached data — show it, but offer fresh data if old
+  updateStatusBar();
+  render();
+  const last = load(LS.lastFetch, 0);
+  const ageHours = (Date.now() - last) / (1000 * 60 * 60);
+  if (ageHours > 6) {
+    // background refresh if data is more than 6 hours old
+    refreshPrices();
+  }
+}
+
+/* Service worker */
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
